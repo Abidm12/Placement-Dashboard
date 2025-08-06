@@ -18,7 +18,7 @@ selected_year = st.sidebar.selectbox("Select Year", options=["All"] + list(years
 selected_branch = st.sidebar.selectbox("Select Branch", options=["All"] + list(branches))
 # Sidebar QR and Download section
 with st.sidebar.expander("📥 Download Report"):
-    st.markdown("### 📲 Scan QR to download Report")
+    
 
     # Display actual QR code image
     st.image("QR_link.png", caption="Scan to open the report", use_container_width=True)
