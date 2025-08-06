@@ -21,7 +21,7 @@ with st.sidebar.expander("📥 Download Report"):
     st.markdown("### 📲 Scan QR to download Report")
 
     # Display actual QR code image
-    st.image("QR.png", caption="Scan to open the report", use_container_width=True)
+    st.image("QR_link.png", caption="Scan to open the report", use_container_width=True)
 
 # Apply filters
 filtered_df = df.copy()
