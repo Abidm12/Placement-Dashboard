@@ -3,11 +3,11 @@ import pandas as pd
 import altair as alt
 
 # Load dataset
-df = pd.read_excel("placed.xlsx")
+df = pd.read_excel("all_placed_data.xlsx")
 df.columns = df.columns.str.strip()
-
+df['Package'] = pd.to_numeric(df['Package'], errors='coerce')
 # Page config
-st.set_page_config(page_title="Placement Insights Dashboard", layout="wide")
+st.set_page_config(page_title="Placement Overview", layout="wide")
 
 # Sidebar filters
 st.sidebar.header("🔎 Filter Data")
@@ -20,7 +20,7 @@ with st.sidebar.expander("📥 Download Report"):
     st.markdown("### 📲 Scan QR to download Report")
 
     # Display actual QR code image
-    st.image("qr.svg", caption="Scan to open the report", use_container_width=True)
+    st.image("QR.png", caption="Scan to open the report", use_container_width=True)
 
 # Apply filters
 filtered_df = df.copy()
@@ -34,7 +34,7 @@ total_placed = filtered_df[filtered_df['Package'].notnull()]['Name'].nunique()
 
 
 # Title and Description
-st.markdown("<h2 style='text-align: center;'>📈 Placement Insights Dashboard</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center;'>📈 Placement Overview</h2>", unsafe_allow_html=True)
 st.markdown("""
 <div style='text-align: center; font-size: 16px;'>
 Explore key placement statistics including top hiring companies and package trends.
@@ -99,36 +99,6 @@ with col1:
 with col2:
     st.markdown("This chart displays the **top companies** that hired the most students. It helps identify the most active recruiters on campus.")
 
-# --- Section 2: Pie Chart or Branch Summary (Zigzag: Info Left, Graph Right) ---
-if selected_branch == "All":
-    st.markdown("<h4 style='text-align: center;'>🏫Number of Placements by Branch</h4>", unsafe_allow_html=True)
-    col3, col4 = st.columns([1, 1])
-    with col3:
-        st.markdown("This pie chart shows the **proportion of placed students** across various branches, offering insights into departmental placement performance.")
-    with col4:
-        branch_counts = filtered_df['Branch'].value_counts().reset_index()
-        branch_counts.columns = ['Branch', 'Count']
-        branch_counts['Percentage'] = (branch_counts['Count'] / branch_counts['Count'].sum()) * 100
-        branch_counts['Label'] = branch_counts.apply(lambda row: f"{row['Branch']} ({row['Percentage']:.1f}%)", axis=1)
-       
-
-        # Define custom colors
-        custom_colors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#845EC2']
-
-        pie = alt.Chart(branch_counts).mark_arc(innerRadius=50).encode(
-            theta=alt.Theta(field="Count", type="quantitative"),
-            color=alt.Color(
-                field="Label", 
-                type="nominal",
-                scale=alt.Scale(range=custom_colors)  # 👈 Custom color palette
-            ),
-            tooltip=['Branch', 'Count', alt.Tooltip('Percentage:Q', format=".2f")]
-        ).properties(width=500, height=250)
-
-        st.altair_chart(pie, use_container_width=True)
-
-
-
 # --- Section  3: Average Package or Distribution (Zigzag: Graph Left, Info Right) ---
 if selected_branch == "All":
     st.markdown("<h4 style='text-align: center;'>💰Branchwise Average Package</h4>", unsafe_allow_html=True)
@@ -185,6 +155,48 @@ if selected_branch == "All":
     - **Top Companies:** Visualized in hiring chart  
     - **Placement by Branch:** Shown via pie chart  
     """)
+    # --- Section 2: Pie Chart for Branch Summary  ---
+# --- Section 2: Pie Chart or Branch Summary (Zigzag: Info Left, Graph Right) ---
+st.markdown("<h4 style='text-align: center;'>🧮 Branchwise Placement Distribution</h4>", unsafe_allow_html=True)
+
+# Load external Excel file for pie charts
+pie_data = pd.read_excel("all_report_data.xlsx")
+pie_data.columns = pie_data.columns.str.strip()
+pie_data['Branch'] = pie_data['Branch'].astype(str).str.strip()
+
+# Show pie chart for selected branch, or loop through all if "All"
+branches_to_plot = [selected_branch] if selected_branch != "All" else sorted(pie_data['Branch'].unique())
+
+for branch in branches_to_plot:
+    branch_df = pie_data[pie_data['Branch'] == branch]
+    
+    if branch_df.empty:
+        continue  # Skip if no data
+
+    eligible = int(branch_df['Eligible_Students'].values[0])
+    placed = int(branch_df['Placed_Students'].values[0])
+    unplaced = max(eligible - placed, 0)
+
+    pie_chart_data = pd.DataFrame({
+        'Status': ['Placed', 'Unplaced'],
+        'Count': [placed, unplaced]
+    })
+
+    col_left, col_right = st.columns([1, 1])
+    with col_left:
+        st.markdown(f"### 📘 {branch} Branch Summary")
+        st.markdown(f"""
+        - **Eligible Students:** `{eligible}`  
+        - **Placed Students:** `{placed}`  
+        - **Unplaced Students:** `{unplaced}`  
+        """)
+    with col_right:
+        chart = alt.Chart(pie_chart_data).mark_arc(innerRadius=50).encode(
+            theta=alt.Theta(field="Count", type="quantitative"),
+            color=alt.Color(field="Status", type="nominal", scale=alt.Scale(scheme='tableau10')),
+            tooltip=['Status', 'Count']
+        ).properties(width=400, height=250)
+        st.altair_chart(chart, use_container_width=True)
 
 
 
