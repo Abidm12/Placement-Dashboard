@@ -3,7 +3,8 @@ import pandas as pd
 import altair as alt
 
 # Load dataset
-df = pd.read_excel("all_placed_data.xlsx")
+df = pd.read_excel("all_placed_data.xlsx", engine="openpyxl")
+
 df.columns = df.columns.str.strip()
 df['Package'] = pd.to_numeric(df['Package'], errors='coerce')
 # Page config
@@ -155,12 +156,11 @@ if selected_branch == "All":
     - **Top Companies:** Visualized in hiring chart  
     - **Placement by Branch:** Shown via pie chart  
     """)
-    # --- Section 2: Pie Chart for Branch Summary  ---
-# --- Section 2: Pie Chart or Branch Summary (Zigzag: Info Left, Graph Right) ---
+
 st.markdown("<h4 style='text-align: center;'>🧮 Branchwise Placement Distribution</h4>", unsafe_allow_html=True)
 
 # Load external Excel file for pie charts
-pie_data = pd.read_excel("all_report_data.xlsx")
+pie_data = pd.read_excel("all_report_data.xlsx", engine="openpyxl")
 pie_data.columns = pie_data.columns.str.strip()
 pie_data['Branch'] = pie_data['Branch'].astype(str).str.strip()
 
